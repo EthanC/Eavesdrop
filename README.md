@@ -11,7 +11,7 @@ Eavesdrop is a Discord Bot that transcribes voice messages and media attachments
 
 ## Getting Started
 
-> [!PREREQUISITES]
+> [!IMPORTANT]
 > - [Discord API](https://discord.com/developers/) credentials for a Bot user are required.
 > - [whisper.cpp](https://github.com/ggml-org/whisper.cpp) server must be accessible via HTTP.
 > - [ffmpeg](https://github.com/FFmpeg/FFmpeg) must be installed and accessible via the system PATH.
