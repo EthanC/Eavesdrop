@@ -3,9 +3,9 @@
 from typing import Any
 
 import ffmpeg
-import httpx
-from httpx import AsyncClient, Response
+import niquests
 from loguru import logger
+from niquests import Response
 
 from core.consts import WHISPER_API_BASE_URL
 
@@ -14,53 +14,58 @@ async def inference(
     audio_url: str, audio_name: str, audio_type: str | None
 ) -> str | None:
     """Return a text transcription of the audio from the provided URL."""
-    async with AsyncClient() as client:
-        async with client.stream("GET", audio_url) as res_audio:
-            res_audio.raise_for_status()
-            audio_data: bytes = await res_audio.aread()
+    # Timeout is 900s (15m) inline with time token is valid
+    # https://docs.discord.com/developers/interactions/receiving-and-responding#followup-messages
+    res_audio: Response = await niquests.aget(audio_url, timeout=900, stream=True)
 
-            logger.debug(f"HTTP {res_audio.status_code} GET {res_audio.url}")
-            logger.trace(f"{audio_data=}")
+    logger.debug(f"HTTP {res_audio.status_code} GET {res_audio.url}")
 
-            # whisper.cpp requires WAV audio format
-            if audio_type != "audio/wav":
-                audio_data = await to_wav(audio_data)
+    audio_data: bytes | None = await res_audio.content
 
-            res: Response = (
-                await client.post(
-                    f"{WHISPER_API_BASE_URL}/inference",
-                    data={
-                        "temperature": "0.0",
-                        "temperature_inc": "0.2",
-                        "response_format": "json",
-                    },
-                    files={"file": (audio_name, audio_data, audio_type)},
-                )
-            ).raise_for_status()
+    logger.trace(f"{audio_data=}")
 
-            logger.debug(f"HTTP {res.status_code} GET {res.url}")
-            logger.trace(f"{res.text=}")
+    if not audio_data:
+        raise RuntimeError("Failed to download audio content")
 
-            data: dict[str, Any] = res.json()
+    if audio_type != "audio/wav":
+        audio_data = await to_wav(audio_data)
 
-            if error := data.get("error"):
-                raise RuntimeError(f"Whisper failed to transcribe audio: {error}")
+    # Timeout is 900s (15m) inline with time token is valid
+    # https://docs.discord.com/developers/interactions/receiving-and-responding#followup-messages
+    res_transcript: Response = await niquests.apost(
+        f"{WHISPER_API_BASE_URL}/inference",
+        data={
+            "temperature": "0.0",
+            "temperature_inc": "0.2",
+            "response_format": "json",
+        },
+        files={"file": (audio_name, audio_data)},
+        timeout=900,
+    )
 
-            text: str | None = data.get("text")
+    logger.debug(f"HTTP {res_transcript.status_code} GET {res_transcript.url}")
+    logger.trace(f"{res_transcript.text=}")
 
-            if not text:
-                raise RuntimeError("Whisper returned no transcription text")
+    data: dict[str, Any] = res_transcript.json()
 
-            result: str = ""
+    if error := data.get("error"):
+        raise RuntimeError(f"Whisper failed to transcribe audio: {error}")
 
-            for line in text.splitlines():
-                result += f"> {line.strip()}\n"
+    text: str | None = data.get("text")
 
-            result = result.strip()
+    if not text:
+        raise RuntimeError("Whisper returned no transcription text")
 
-            logger.info(f"Transcribed audio {audio_name}: {result}")
+    result: str = ""
 
-            return result
+    for line in text.splitlines():
+        result += f"> {line.strip()}\n"
+
+    result = result.strip()
+
+    logger.info(f"Transcribed audio {audio_name}: {result}")
+
+    return result
 
 
 async def to_wav(in_bytes: bytes) -> bytes:
