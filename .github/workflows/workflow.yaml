@@ -7,7 +7,8 @@ on:
   pull_request:
 
 permissions:
-  contents: write
+  contents: read
+  packages: write
 
 jobs:
   image:
@@ -35,7 +36,7 @@ jobs:
       - name: Lowercase Repository Name
         id: repository
         run: |
-          echo "name_lowercase=$(echo '${{ github.event.repository.name }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
+          echo "name_lowercase=$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
       - name: Build and Push to GHCR
         uses: docker/build-push-action@v6
         with:
