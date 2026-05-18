@@ -14,7 +14,6 @@ Eavesdrop is a Discord Bot that transcribes voice messages and media attachments
 > [!IMPORTANT]
 > - [Discord API](https://discord.com/developers/) credentials for a Bot user are required.
 > - [whisper.cpp](https://github.com/ggml-org/whisper.cpp) server must be accessible via HTTP.
-> - [ffmpeg](https://github.com/FFmpeg/FFmpeg) must be installed and accessible via the system PATH.
 
 ### Quick Start: Docker (Recommended)
 
@@ -24,7 +23,7 @@ Edit and run this `compose.yaml` example with `docker compose up -d`.
 services:
   eavesdrop:
     container_name: eavesdrop
-    image: ethanchrisp/eavesdrop:latest
+    image: ghcr.io/ethanc/eavesdrop:latest
     environment:
       LOG_LEVEL: INFO
       LOG_DISCORD_WEBHOOK_URL: https://discord.com/api/webhooks/XXXXXXXX/XXXXXXXX

@@ -2,7 +2,6 @@
 
 from typing import Any
 
-import ffmpeg
 import niquests
 from loguru import logger
 from niquests import Response
@@ -26,9 +25,6 @@ async def inference(
 
     if not audio_data:
         raise RuntimeError("Failed to download audio content")
-
-    if audio_type != "audio/wav":
-        audio_data = await to_wav(audio_data)
 
     # Timeout is 900s (15m) inline with time token is valid
     # https://docs.discord.com/developers/interactions/receiving-and-responding#followup-messages
@@ -66,20 +62,3 @@ async def inference(
     logger.info(f"Transcribed audio {audio_name}: {result}")
 
     return result
-
-
-async def to_wav(in_bytes: bytes) -> bytes:
-    """Return the provided audio bytes as WAV format."""
-    process = (
-        ffmpeg.input("pipe:0")
-        .output("pipe:1", format="wav")
-        .run_async(pipe_stdin=True, pipe_stdout=True, pipe_stderr=True)
-    )
-    wav, stderr = process.communicate(input=in_bytes)
-
-    if process.returncode != 0:
-        raise RuntimeError(f"ffmpeg failed to convert to WAV: {stderr.decode()}")
-
-    logger.debug("Converted input to WAV audio")
-
-    return wav
