@@ -2,12 +2,12 @@
 
 ![Python](https://img.shields.io/badge/Python-3-blue?logo=python&logoColor=white)
 ![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/ethanc/eavesdrop/workflow.yaml)
-![Docker Pulls](https://img.shields.io/docker/pulls/ethanchrisp/eavesdrop?label=Docker%20Pulls)
-![Docker Image Size (tag)](https://img.shields.io/docker/image-size/ethanchrisp/eavesdrop/latest?label=Docker%20Image%20Size)
 
 # Eavesdrop
 
 Eavesdrop is a Discord Bot that transcribes voice messages and media attachments. It is powered by the [whisper.cpp](https://github.com/ggml-org/whisper.cpp) speech-to-text engine.
+
+![Example](/assets/eavesdrop_readme_example.png)
 
 ## Getting Started
 
